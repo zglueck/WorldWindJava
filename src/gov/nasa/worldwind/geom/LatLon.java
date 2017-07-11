@@ -1975,12 +1975,20 @@ public class LatLon
 
         Vec4 oldPoint = globe.computeEllipsoidalPointFromLocation(oldLocation);
         Vec4 newPoint = globe.computeEllipsoidalPointFromLocation(newLocation);
-        Vec4 delta = newPoint.subtract3(oldPoint);
+        
+        /*
+        Alternative Methodology to better handle dragging near the horizon. This method is attempting to limit the
+        distortion to the shape at the horizon.
+         */
+        Vec4 norm = oldPoint.cross3(newPoint).normalize3();
+        Quaternion rotation = Quaternion.fromAxisAngle(oldPoint.angleBetween3(newPoint), norm);
 
         for (LatLon latLon : locations)
         {
             Vec4 point = globe.computeEllipsoidalPointFromLocation(latLon);
-            point = point.add3(delta);
+
+            point = point.transformBy3(rotation);
+
             Position newPos = globe.computePositionFromEllipsoidalPoint(point);
 
             newLocations.add(newPos);
